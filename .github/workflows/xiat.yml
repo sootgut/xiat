@@ -1,0 +1,38 @@
+name: xiat
+
+on:
+  schedule:
+  - cron: '0 0 * * *' # 9AM KST
+
+jobs:
+  x:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    # 1st step
+    - name: Git config
+      run: |
+        git config --global user.email "$(git --no-pager log --format=format:'%an' -n 1)"
+        git config --global user.name "$(git --no-pager log --format=format:'%an' -n 1)"
+        git pull
+    # 2nd step
+    - name: Get date
+      id: date
+      run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
+    # 3rd step
+    - name: Create file
+      uses: finnp/create-file-action@1.0.0
+      env:
+        FILE_NAME: xiat
+        FILE_DATA: ${{ steps.date.outputs.date }}
+    # 4th step
+    - name: Git commit
+      run: |
+        git add .
+        git commit -m "${{ steps.date.outputs.date }}"
+    # 5th step
+    - name: Git push
+      uses: ad-m/github-push-action@v0.6.0
+      with:
+        github_token: ${{ secrets.GH_TOKEN }}
+        branch: ${{ github.ref }}
